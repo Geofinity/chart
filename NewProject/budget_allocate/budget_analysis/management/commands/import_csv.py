@@ -87,27 +87,32 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.ERROR(f"Unexpected error: {e}"))
 
     def create_ward(self, stream):
+        count = 1
+        wards=[]
         for ward_vals in stream:
+            print(count)
+            count +=1
+
             try:
                 ward_number, LGNameEn= list(ward_vals)
                 try:
-                    municipality= Municipality.objects.get(municipality=LGNameEn)
+                    municipality= Municipality.objects.get(name_en=LGNameEn)
                     print(f"Found Municipality: {municipality}")
                 except Municipality.DoesNotExist:
                     self.stdout.write(self.style.ERROR(f"Municipality does not exist. Skipping..."))
                     continue
-
+            
                 ward, created = Ward.objects.get_or_create(
-                    ward=ward_number, municipality=municipality)
+                name_en=ward_number, municipality=municipality,name_ne=ward_number)
                 if created:
                     self.stdout.write(self.style.SUCCESS(f"ward added: {ward}"))
                 else:
                     self.stdout.write(self.style.WARNING(f"Ward already exists"))
             
             except ValueError as e:
-                self.stdout.write(self.style.ERROR(f"Error unpacking district values: {e}"))
+                self.stdout.write(self.style.ERROR(f"Error unpacking district values: {e} {ward_number} {LGNameEn}"))
             except Exception as e:
-                self.stdout.write(self.style.ERROR(f"Unexpected error: {e}"))
+                self.stdout.write(self.style.ERROR(f"Unexpected error: {e} {ward_number} {LGNameEn}"))
 
 
     def handle(self, *args, **kwargs):
@@ -127,10 +132,19 @@ class Command(BaseCommand):
                 district_stream.add((row["DistrictNameEn"],row["DistrictNameNp"],row["Province"]))
                 municipality_stream.add((row["LGNameEn"],row["LGnameNp"], row["DistrictNameEn"]))
                 ward_stream.add((row["Ward"], row["LGNameEn"]))
+            
+            w = []
+            for ward,m in ward_stream:
+                if not ward == "-":
+                    w.append((ward,m))
+
+            print(len(w))
+                
+
 
             # self.create_province(province_stream)
             # self.create_district(district_stream)
             # self.create_municipality(municipality_stream)
-            self.create_ward(ward_stream)
+            self.create_ward(w)
 
 
