@@ -40,9 +40,9 @@ class Municipality(models.Model):
 
 
 class Ward(models.Model):
-    ward_number = models.PositiveIntegerField(verbose_name="Ward Number",default=1)
-    name_en = models.CharField(max_length=255, verbose_name="Ward Name (English)",default=1)
-    name_ne = models.CharField(max_length=255, verbose_name="Ward Name (Nepali)",default=1)
+    ward_number = models.PositiveIntegerField(verbose_name="Ward Number")
+    name_en = models.CharField(max_length=255, verbose_name="Ward Name (English)")
+    name_ne = models.CharField(max_length=255, verbose_name="Ward Name (Nepali)")
     municipality = models.ForeignKey(Municipality, on_delete=models.CASCADE, related_name='wards')
 
     class Meta:
