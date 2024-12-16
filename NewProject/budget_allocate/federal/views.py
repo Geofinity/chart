@@ -158,6 +158,17 @@ class BudgetAllocationViewSet(viewsets.GenericViewSet, viewsets.mixins.ListModel
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['description']
 
+    @action(detail=False, methods=['get'], url_path='list-fiscal-years')
+    def list_fiscal_years(self, request, *args, **kwargs):
+        """
+        Return a list of distinct fiscal years.
+        Example: /api/budget-allocations/list-fiscal-years/
+        """
+        fiscal_years = BudgetAllocation.objects.values('fiscal_year').distinct()
+
+        return Response(fiscal_years, status=status.HTTP_200_OK)
+
+
     @action(detail=False, methods=['get'], url_path='total-budget')
     def total_budget(self, request, *args, **kwargs):
         """
