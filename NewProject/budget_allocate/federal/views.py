@@ -20,20 +20,26 @@ class ProvinceViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_fields = ['name_en', 'name_ne']
     search_fields = ['name_en', 'name_ne']
 
-    # Custom action to list districts for a certain province
-    @action(detail=True, methods=['get'], url_path='districts')
-    def get_districts(self, request, pk=None):
+    @action(detail=False, methods=['get'], url_path='districts-by-name')
+    def get_districts_by_name(self, request):
         """
-        Get all districts for a specific province.
-        Example: /api/provinces/1/districts/
+        Get all districts for a specific province by name.
+        Example: /api/provinces/districts-by-name/?name=Bagmati
         """
-        province = self.get_object()  # Get the province by pk
-        districts = District.objects.filter(province=province)  # Filter districts by province
+        province_name = request.query_params.get('name')  
+        if not province_name:
+            return Response({"error": "Province name is required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Serialize the districts data
-        district_serializer = DistrictSerializer(districts, many=True)
+        try:
+            # Fetch province by name_en
+            province = Province.objects.get(name_en=province_name)
+        except Province.DoesNotExist:
+            return Response({"error": f"Province '{province_name}' not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        return Response(district_serializer.data, status=status.HTTP_200_OK)
+        # Fetch districts associated with the province
+        districts = District.objects.filter(province=province)
+        serializer = DistrictSerializer(districts, many=True)  
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class DistrictViewSet(viewsets.ReadOnlyModelViewSet):
@@ -43,22 +49,24 @@ class DistrictViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_fields = ['name_en', 'name_ne', 'province']
     search_fields = ['name_en', 'name_ne']
 
-    @action(detail=True, methods=['get'], url_path='municipalities')
-    def get_municipalities(self, request, pk=None):
+    @action(detail=False, methods=['get'], url_path='municipalities-by-name')
+    def get_municipalities_by_name(self, request):
         """
-        List all municipalities in the specified district.
-        Example: /api/districts/{district_id}/municipalities/
+        Get all municipalities for a specific district by name.
+        Example: /api/districts/municipalities-by-name/?name=Kathmandu
         """
-        # Get the district object by ID (pk)
-        district = self.get_object()
-        # Filter municipalities by the selected district
+        district_name = request.query_params.get('name')
+        if not district_name:
+            return Response({"error": "District name is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            district = District.objects.get(name_en=district_name)
+        except District.DoesNotExist:
+            return Response({"error": f"District '{district_name}' not found."}, status=status.HTTP_404_NOT_FOUND)
+
         municipalities = Municipality.objects.filter(district=district)
-
-        # Serialize the municipalities
         serializer = MunicipalitySerializer(municipalities, many=True)
-
         return Response(serializer.data, status=status.HTTP_200_OK)
-
 
 
 class MunicipalityViewSet(viewsets.ReadOnlyModelViewSet):
@@ -68,21 +76,24 @@ class MunicipalityViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_fields = ['name_en', 'name_ne', 'district']
     search_fields = ['name_en', 'name_ne']
 
-    # Custom action to list wards for a specific municipality
-    @action(detail=True, methods=['get'], url_path='wards')
-    def get_wards(self, request, pk=None):
+    @action(detail=False, methods=['get'], url_path='wards-by-name')
+    def get_wards_by_name(self, request):
         """
-        Get all wards for a specific municipality.
-        Example: /api/municipalities/1/wards/
+        Get all wards for a specific municipality by name.
+        Example: /api/municipalities/wards-by-name/?name=Kathmandu
         """
-        municipality = self.get_object()  # Get the municipality by pk
-        wards = Ward.objects.filter(municipality=municipality)  # Filter wards by municipality
+        municipality_name = request.query_params.get('name')
+        if not municipality_name:
+            return Response({"error": "Municipality name is required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Serialize the wards data
-        ward_serializer = WardSerializer(wards, many=True)
+        try:
+            municipality = Municipality.objects.get(name_en=municipality_name)
+        except Municipality.DoesNotExist:
+            return Response({"error": f"Municipality '{municipality_name}' not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        return Response(ward_serializer.data, status=status.HTTP_200_OK)
-
+        wards = Ward.objects.filter(municipality=municipality)
+        serializer = WardSerializer(wards, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class WardViewSet(viewsets.ReadOnlyModelViewSet):
@@ -151,29 +162,29 @@ class BudgetAllocationViewSet(viewsets.GenericViewSet, viewsets.mixins.ListModel
     def total_budget(self, request, *args, **kwargs):
         """
         Calculate total budget based on filters.
-        Example: /api/budget-allocations/total-budget/?province=1&sector=Infrastructure
+        Example: /api/budget-allocations/total-budget/?province=Bagmati&sector=Infrastructure
         """
         filters = {}
 
-        province_id = request.query_params.get('province')
-        district_id = request.query_params.get('district')
-        municipality_id = request.query_params.get('municipality')
-        ward_id = request.query_params.get('ward')
-        sector_id = request.query_params.get('sector')
-        sub_sector_id = request.query_params.get('sub_sector')
+        province_name = request.query_params.get('province')
+        district_name = request.query_params.get('district')
+        municipality_name = request.query_params.get('municipality')
+        ward_number = request.query_params.get('ward')
+        sector_name = request.query_params.get('sector')
+        sub_sector_name = request.query_params.get('sub_sector')
 
-        if province_id:
-            filters['ward__municipality__district__province_id'] = province_id
-        if district_id:
-            filters['ward__municipality__district_id'] = district_id
-        if municipality_id:
-            filters['ward__municipality_id'] = municipality_id
-        if ward_id:
-            filters['ward_id'] = ward_id
-        if sector_id:
-            filters['sector_id'] = sector_id
-        if sub_sector_id:
-            filters['sub_sector_id'] = sub_sector_id
+        if province_name:
+            filters['ward__municipality__district__province__name_en'] = province_name
+        if district_name:
+            filters['ward__municipality__district__name_en'] = district_name
+        if municipality_name:
+            filters['ward__municipality__name_en'] = municipality_name
+        if ward_number:
+            filters['ward__ward_number'] = ward_number
+        if sector_name:
+            filters['sector__sector_name'] = sector_name
+        if sub_sector_name:
+            filters['sub_sector__subsector_name'] = sub_sector_name
 
         total_budget = BudgetAllocation.objects.filter(**filters).aggregate(
             total_budget=Sum('budget_amount')
