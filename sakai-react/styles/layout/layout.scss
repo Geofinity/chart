@@ -10,7 +10,123 @@
 @import "./_utils";
 @import "./_typography";
 
-
 .leaflet-top {
     z-index: 500 !important;
+}
+
+.filters-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 1px;
+    padding: 15px;
+    margin-bottom: 15px;
+    background-color: #f7f7f7;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* Added subtle shadow */
+    width: 100%;
+}
+
+.filter-label {
+    font-size: 20px; /* Slightly larger text for readability */
+    font-weight: bold;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 8px;
+    width: 200px; /* Increased width for better readability */
+    color: #333;
+}
+
+.filter-select {
+    font-size: 2px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    outline: none;
+    z-index: 501;
+    width: 100%; /* Ensure select takes full width */
+    max-width: 200px; /* Max width of the select box */
+    box-sizing: border-box;
+    transition: all 0.3s ease; /* Smooth transition on focus */
+}
+
+.filter-select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 8px rgba(0, 123, 255, 0.5);
+    
+}
+
+.filter-select option {
+    padding: 8px; /* Added padding for better readability inside the select */
+}
+
+/* Mobile-friendly adjustments */
+@media (max-width: 768px) {
+    .filters-container {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 12px;
+    }
+
+    .filter-label {
+        width: 100%;
+        margin-bottom: 12px;
+    }
+
+    .filter-select {
+        width: 100%;
+        max-width: none; /* Remove max-width for mobile */
+    }
+
+    /* Adjust map size for smaller screens */
+    #map {
+        height: 60vh; /* Adjust height for mobile */
+        width: 100%;
+    }
+}
+
+/* For very small screens like mobile portrait */
+@media (max-width: 480px) {
+    .filters-container {
+        gap: 10px;
+        padding: 10px;
+    }
+
+    .filter-label {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .filter-select {
+        font-size: 13px; /* Smaller font for select boxes */
+        padding: 6px; /* Reduced padding for smaller screens */
+    }
+
+    /* Adjust map size for very small screens */
+    #map {
+        height: 50vh; /* Adjust height for mobile */
+        width: 100%;
+    }
+}
+
+/* Adjust the font size and make the dropdown width auto */
+.small-dropdown {
+    width: auto;  /* Automatically adjust the width based on the selected item */
+    font-size: 5px;  /* Reduce the text size */
+    padding: 5px;  /* Adjust padding to fit the smaller font size */
+}
+
+.filter-select .p-dropdown {
+    font-size: 5px; /* Adjust font size for dropdown items */
+    padding: 5px;  /* Adjust padding of dropdown items */
+}
+
+/* Optional: Adjust the dropdown button size */
+.p-dropdown-trigger {
+    padding: 5px 10px; /* Adjust padding of the dropdown trigger button */
+}
+
+/* Ensure the dropdown content width adjusts based on text */
+.p-dropdown-panel {
+    width: auto !important; /* Allow the panel width to adjust based on content */
 }

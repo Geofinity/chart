@@ -1,186 +1,220 @@
-"use client";
+'use client';
 
-import { useEffect, useRef, useState } from "react";
-import L from "leaflet";
-import province from "./geojson/province.geojson.json";
+import { useEffect, useRef, useState } from 'react';
+import L from 'leaflet';
+import province from './geojson/province.geojson.json';
+import { Dropdown } from 'primereact/dropdown'; // Import PrimeReact Dropdown
 
 const LeafletMap = () => {
-  const mapRef = useRef();
-  const [filters, setFilters] = useState({
-    fiscalYear: "All",
-    province: "All",
-    district: "All",
-    municipality: "All",
-    ward: "All",
-  });
+    const [districts, setDistricts] = useState([]);
+    const [municipalities, setMunicipalities] = useState([]);
+    const [provinces, setProvinces] = useState([]);
 
-  const fiscalYears = ["2023/24", "2022/23", "2021/22"];
-  const provinces= [
-    "Koshi",
-    "Madhesh",
-    "Bagmati",
-    "Gandaki",
-    "Lumbini",
-    "Karnali",
-    "Sudurpashchim"
-]
+    const fetchData = async () => {
+        try {
+            const districtsRes = await fetch('http://127.0.0.1:8000/api/districts/');
+            const municipalitiesRes = await fetch('http://127.0.0.1:8000/api/municipalities/');
+            const provincesRes = await fetch('http://127.0.0.1:8000/api/provinces/');
 
-  const districts = [
-    "Achham", "Arghakhanchi", "Baglung", "Baitadi", "Bajhang", "Bajura", 
-    "Banke", "Bara", "Bardiya", "Bhaktapur", "Bhojpur", "Chitwan", 
-    "Dadeldhura", "Dailekh", "Dang", "Darchula", "Dhading", "Dhankuta", 
-    "Dhanusha", "Dolakha", "Dolpa", "Doti", "Gorkha", "Gulmi", 
-    "Humla", "Ilam", "Jajarkot", "Jhapa", "Jumla", "Kailali", 
-    "Kalikot", "Kanchanpur", "Kapilvastu", "Kaski", "Kathmandu", "Kavrepalanchok", 
-    "Khotang", "Lalitpur", "Lamjung", "Mahottari", "Makwanpur", "Manang", 
-    "Morang", "Mugu", "Mustang", "Myagdi", "Nawalparasi East", "Nawalparasi West", 
-    "Nuwakot", "Okhaldhunga", "Palpa", "Panchthar", "Parbat", "Parsa", 
-    "Pyuthan", "Ramechhap", "Rasuwa", "Rautahat", "Rolpa", "Rukum East", 
-    "Rukum West", "Rupandehi", "Salyan", "Sankhuwasabha", "Saptari", "Sarlahi", 
-    "Sindhuli", "Sindhupalchok", "Siraha", "Solukhumbu", "Sunsari", "Surkhet", 
-    "Syangja", "Tanahun", "Taplejung", "Terhathum", "Udayapur"
-]
-; // Replace with actual data
-  const municipalities = ["Municipality 1", "Municipality 2"]; // Replace with actual data
-  const wards = ["Ward 1", "Ward 2", "Ward 3"]; // Replace with actual data
+            const districtsData = await districtsRes.json();
+            const municipalitiesData = await municipalitiesRes.json();
+            const provincesData = await provincesRes.json();
 
-  useEffect(() => {
-    if (!mapRef.current) {
-      mapRef.current = L.map("map").setView([28.232, 83.979], 7);
-
-      L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 19,
-        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      }).addTo(mapRef.current);
-
-      renderGeoJSON();
-    }
-
-    return () => {
-      if (mapRef.current) {
-        mapRef.current.remove();
-        mapRef.current = null;
-      }
+            setDistricts(districtsData);
+            setMunicipalities(municipalitiesData);
+            setProvinces(provincesData);
+        } catch (error) {
+            console.log(error);
+        }
     };
-  }, []);
 
-  const renderGeoJSON = () => {
-    if (!mapRef.current) return;
-
-    // Clear existing layers
-    mapRef.current.eachLayer((layer) => {
-      if (layer instanceof L.GeoJSON) {
-        mapRef.current.removeLayer(layer);
-      }
+    const mapRef = useRef();
+    const [filters, setFilters] = useState({
+        fiscalYear: 'All',
+        province: null,
+        district: null,
+        municipality: null,
+        ward: null
     });
 
-    const provinceStyle = { color: "#3388ff", weight: 2, fillOpacity: 0.5 };
-    const provinceHighlightStyle = { color: "#ff7800", weight: 3, fillOpacity: 0.7 };
-
-    // Filter provinces based on filters
-    const filteredGeoJSON = {
-      ...province,
-      features: province.features.filter((feature) => {
-        const matchesProvince =
-          filters.province === "All" || feature.properties.name === filters.province;
-        // Add logic for district, municipality, and ward filtering if data is available
-        return matchesProvince;
-      }),
+    const fiscalYears = ['2023/24', '2022/23', '2021/22'];
+    const provinceMap = {
+        1: 'Koshi',
+        2: 'Madhesh',
+        3: 'Bagmati',
+        4: 'Lumbini',
+        5: 'Gandaki',
+        6: 'Karnali',
+        7: 'Sudurpashchim'
     };
 
-    L.geoJSON(filteredGeoJSON, {
-      style: provinceStyle,
-      onEachFeature: (feature, layer) => {
-        layer.on("mouseover", () => layer.setStyle(provinceHighlightStyle));
-        layer.on("mouseout", () => layer.setStyle(provinceStyle));
+    const wards = ['Ward 1', 'Ward 2', 'Ward 3']; // Replace with actual data
 
-        if (feature.properties && feature.properties.name) {
-          layer.bindTooltip(feature.properties.name, {
-            permanent: false,
-            direction: "center",
-            className: "province-tooltip",
-          });
+    useEffect(() => {
+        if (!mapRef.current) {
+            mapRef.current = L.map('map').setView([28.232, 83.979], 7);
+
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            }).addTo(mapRef.current);
+
+            renderGeoJSON();
         }
 
-        layer.bindPopup(
-          `<b>${feature.properties.title_en} Province </b><br><b>${feature.properties.title_ne}  प्रदेश</b><br>Province : ${feature.id}`
-        );
-      },
-    }).addTo(mapRef.current);
-  };
+        fetchData();
 
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters((prevFilters) => ({
-      ...prevFilters,
-      [name]: value,
-    }));
-    renderGeoJSON(); // Re-render GeoJSON with updated filters
-  };
+        return () => {
+            if (mapRef.current) {
+                mapRef.current.remove();
+                mapRef.current = null;
+            }
+        };
+    }, []);
 
-  return (
-    <div>
-      <div style={{ marginBottom: "10px", padding: "10px" }}>
-        <label>
-          Fiscal Year:
-          <select name="fiscalYear" onChange={handleFilterChange} value={filters.fiscalYear}>
-            <option value="All">All</option>
-            {fiscalYears.map((year) => (
-              <option key={year} value={year}>
-                {year}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Province:
-          <select name="province" onChange={handleFilterChange} value={filters.province}>
-            <option value="All">All</option>
-            {provinces.map((province) => (
-              <option key={province} value={province}>
-                {province}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          District:
-          <select name="district" onChange={handleFilterChange} value={filters.district}>
-            <option value="All">All</option>
-            {districts.map((district) => (
-              <option key={district} value={district}>
-                {district}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Municipality:
-          <select name="municipality" onChange={handleFilterChange} value={filters.municipality}>
-            <option value="All">All</option>
-            {municipalities.map((municipality) => (
-              <option key={municipality} value={municipality}>
-                {municipality}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Ward:
-          <select name="ward" onChange={handleFilterChange} value={filters.ward}>
-            <option value="All">All</option>
-            {wards.map((ward) => (
-              <option key={ward} value={ward}>
-                {ward}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
+    const renderGeoJSON = () => {
+        if (!mapRef.current) return;
 
-      <div id="map" style={{ height: "75vh", width: "100vw" }}></div>
-    </div>
-  );
+        // Clear existing layers
+        mapRef.current.eachLayer((layer) => {
+            if (layer instanceof L.GeoJSON) {
+                mapRef.current.removeLayer(layer);
+            }
+        });
+
+        const provinceStyle = { color: '#3388ff', weight: 2, fillOpacity: 0.5 };
+        const provinceHighlightStyle = { color: '#ff7800', weight: 3, fillOpacity: 0.7 };
+
+        // Filter provinces based on filters
+        const filteredGeoJSON = {
+            ...province,
+            features: province.features.filter((feature) => {
+                const matchesProvince = filters.province === null || feature.properties.name === filters.province;
+                return matchesProvince;
+            })
+        };
+
+        L.geoJSON(filteredGeoJSON, {
+            style: provinceStyle,
+            onEachFeature: (feature, layer) => {
+                // Highlight on hover
+                layer.on('mouseover', () => layer.setStyle(provinceHighlightStyle));
+                layer.on('mouseout', () => layer.setStyle(provinceStyle));
+
+                // Bind tooltips
+                if (feature.properties && feature.properties.name) {
+                    layer.bindTooltip(feature.properties.name, {
+                        permanent: false,
+                        direction: 'center',
+                        className: 'province-tooltip'
+                    });
+                }
+
+                // Bind popup
+                layer.bindPopup(`<b>${feature.properties.title_en} Province </b><br><b>${feature.properties.title_ne}  प्रदेश</b><br>Province : ${feature.id}`);
+
+                // Handle click event to update filters
+                layer.on('click', () => {
+                    setFilters((prevFilters) => ({
+                        ...prevFilters,
+                        province: feature.properties.name || null // Set province filter on click
+                    }));
+                });
+            }
+        }).addTo(mapRef.current);
+    };
+
+    const handleFilterChange = (e) => {
+        const { name, value } = e.target;
+        setFilters((prevFilters) => ({
+            ...prevFilters,
+            [name]: value || null
+        }));
+    };
+
+    return (
+        <div>
+            <div className="filters-container">
+                <label className="filter-label block text-sm font-semibold text-gray-700">
+                    Fiscal Year
+                    <Dropdown
+                        name="fiscalYear"
+                        value={filters.fiscalYear}
+                        onChange={handleFilterChange}
+                        options={fiscalYears}
+                        className="filter-select w-48 text-xs"
+                        filter
+                    />
+                </label>
+
+                <label className="filter-label block text-sm font-semibold text-gray-700">
+                    Province
+                    <Dropdown
+                        name="province"
+                        value={filters.province}
+                        onChange={handleFilterChange}
+                        options={provinces.map((province) => ({
+                            label: provinceMap[province.name_en],
+                            value: province.name_en
+                        }))}
+                        placeholder="Select Province"
+                        className="filter-select w-48 text-xs"
+                        filter
+                    />
+                </label>
+
+                <label className="filter-label block text-sm font-semibold text-gray-700">
+                    District
+                    <Dropdown
+                        name="district"
+                        value={filters.district}
+                        onChange={handleFilterChange}
+                        options={districts.map((district) => ({
+                            label: district.name_en,
+                            value: district.name_en
+                        }))}
+                        placeholder="Select District"
+                        className="filter-select w-48 text-xs"
+                        filter
+                    />
+                </label>
+
+                <label className="filter-label block text-sm font-semibold text-gray-700">
+                    Municipality
+                    <Dropdown
+                        name="municipality"
+                        value={filters.municipality}
+                        onChange={handleFilterChange}
+                        options={municipalities.map((municipality) => ({
+                            label: municipality.name_en,
+                            value: municipality.name_en
+                        }))}
+                        placeholder="Select Municipality"
+                        className="filter-select w-48 text-xs"
+                        filter
+                    />
+                </label>
+
+                <label className="filter-label block text-sm font-semibold text-gray-700">
+                    Ward
+                    <Dropdown
+                        name="ward"
+                        value={filters.ward}
+                        onChange={handleFilterChange}
+                        options={wards.map((ward) => ({
+                            label: ward,
+                            value: ward
+                        }))}
+                        placeholder="Select Ward"
+                        className="filter-select w-48 text-xs"
+                        filter
+                    />
+                </label>
+            </div>
+
+            <div id="map" style={{ height: '75vh', width: '100vw' }}></div>
+        </div>
+    );
 };
 
 export default LeafletMap;
