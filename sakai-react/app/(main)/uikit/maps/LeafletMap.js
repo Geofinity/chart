@@ -3,37 +3,17 @@
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import province from './geojson/province.geojson.json';
-// import municipalities from './geojson/municipality.geojson.json'
-// import district from './geojson/district.geojson.json'
-// import ward from './geojson/ward.geojson.json'
-import { Dropdown } from 'primereact/dropdown'; // Import PrimeReact Dropdown
+import { Dropdown } from 'primereact/dropdown';
 import ChartDemo from '../charts/page';
 
 const LeafletMap = () => {
     const [districts, setDistricts] = useState([]);
     const [municipalities, setMunicipalities] = useState([]);
     const [provinces, setProvinces] = useState([]);
-    const [displayChart, setDisplayChart] = useState(false); // Chart state
-
-    const chartRef = useRef(null); // Ref for the chart section
-
-    const fetchData = async () => {
-        try {
-            const districtsRes = await fetch('http://127.0.0.1:8000/api/districts/');
-            const municipalitiesRes = await fetch('http://127.0.0.1:8000/api/municipalities/');
-            const provincesRes = await fetch('http://127.0.0.1:8000/api/provinces/');
-
-            const districtsData = await districtsRes.json();
-            const municipalitiesData = await municipalitiesRes.json();
-            const provincesData = await provincesRes.json();
-
-            setDistricts(districtsData);
-            setMunicipalities(municipalitiesData);
-            setProvinces(provincesData);
-        } catch (error) {
-            console.log(error);
-        }
-    };
+    const [wards, setWards] = useState([]);
+    const [displayChart, setDisplayChart] = useState(false);
+    const [displayWard, setdisplayWard]= useState(false)
+    const chartRef = useRef(null);
 
     const mapRef = useRef();
     const [filters, setFilters] = useState({
@@ -49,13 +29,27 @@ const LeafletMap = () => {
         1: 'Koshi',
         2: 'Madhesh',
         3: 'Bagmati',
-        4: 'Lumbini',
-        5: 'Gandaki',
+        5: 'Lumbini',
+        4: 'Gandaki',
         6: 'Karnali',
         7: 'Sudurpashchim'
     };
 
-    const wards = ['Ward 1', 'Ward 2', 'Ward 3']; // Replace with actual data
+    const fetchData = async () => {
+        try {
+            const districtsRes = await fetch('http://127.0.0.1:8000/api/districts/');
+            const municipalitiesRes = await fetch('http://127.0.0.1:8000/api/municipalities/');
+            const provincesRes = await fetch('http://127.0.0.1:8000/api/provinces/');
+            const wardsRes = await fetch('http://127.0.0.1:8000/api/wards/');
+
+            setDistricts(await districtsRes.json());
+            setMunicipalities(await municipalitiesRes.json());
+            setProvinces(await provincesRes.json());
+            setWards(await wardsRes.json());
+        } catch (error) {
+            console.error(error);
+        }
+    };
 
     useEffect(() => {
         if (!mapRef.current) {
@@ -63,7 +57,7 @@ const LeafletMap = () => {
 
             L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
-                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                attribution: '&copy; OpenStreetMap'
             }).addTo(mapRef.current);
 
             renderGeoJSON();
@@ -131,44 +125,58 @@ const LeafletMap = () => {
         }).addTo(mapRef.current);
     };
 
-    const handleFilterChange = (e) => {
-        const { name, value } = e.target;
-        setFilters((prevFilters) => ({
-            ...prevFilters,
-            [name]: value || null
-        }));
+
+    const handleFilterChange = (name, value) => {
+        let updatedFilters = { ...filters, [name]: value };
+
+        // Automatically filter related dropdowns
+        if (name === 'province') {
+            updatedFilters.district = null;
+            updatedFilters.municipality = null;
+            updatedFilters.ward = null;
+        }
+        if (name === 'district') {
+            updatedFilters.municipality = null;
+            updatedFilters.ward = null;
+
+            // Update province automatically
+            const district = districts.find((d) => d.name_en === value);
+            updatedFilters.province = district ? district.province.name_en : filters.province;
+        }
+        if (name === 'municipality') {
+            updatedFilters.ward = null;
+
+            // Update district and province automatically
+            const municipality = municipalities.find((m) => m.name_en === value);
+            updatedFilters.district = municipality ? municipality.district.name_en : filters.district;
+            updatedFilters.province = municipality ? municipality.district.province.name_en : filters.province;
+              
+        }
+
+        setFilters(updatedFilters);
     };
 
-    const toggleChart = async() => {
+    const toggleChart = async () => {
         await setDisplayChart(true);
-
-        // Scroll to chart section
-        if (chartRef.current) {
-            chartRef.current.scrollIntoView({ behavior: 'smooth' });
-        }
+        chartRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
     return (
-        <div className='flex flex-col gap-5 items-center'>
+        <div className="flex flex-col gap-5 items-center">
             <div className="filters-container text-xl bg-white flex px-6">
-                <label className="filter-label block  font-semibold text-gray-700 ">
+                {/* Fiscal Year Dropdown */}
+                <label className="filter-label block font-semibold text-gray-700">
                     Fiscal Year
-                    <Dropdown
-                        name="fiscalYear"
-                        value={filters.fiscalYear}
-                        onChange={handleFilterChange}
-                        options={fiscalYears}
-                        className="filter-select w-48 text-xs"
-                        filter
-                    />
+                    <Dropdown name="fiscalYear" value={filters.fiscalYear} onChange={(e) => handleFilterChange('fiscalYear', e.value)} options={fiscalYears} className="filter-select w-48 text-xs" filter />
                 </label>
 
+                {/* Province Dropdown */}
                 <label className="filter-label block font-semibold text-gray-700">
                     Province
                     <Dropdown
                         name="province"
                         value={filters.province}
-                        onChange={handleFilterChange}
+                        onChange={(e) => handleFilterChange('province', e.value)}
                         options={provinces.map((province) => ({
                             label: provinceMap[province.name_en],
                             value: province.name_en
@@ -179,58 +187,64 @@ const LeafletMap = () => {
                     />
                 </label>
 
+                {/* District Dropdown */}
                 <label className="filter-label block font-semibold text-gray-700">
                     District
                     <Dropdown
                         name="district"
                         value={filters.district}
-                        onChange={handleFilterChange}
-                        options={districts.map((district) => ({
-                            label: district.name_en,
-                            value: district.name_en
-                        }))}
+                        onChange={(e) => handleFilterChange('district', e.value)}
+                        options={districts
+                            .filter((d) => !filters.province || d.province.name_en === filters.province)
+                            .map((district) => ({
+                                label: district.name_en,
+                                value: district.name_en
+                            }))}
                         placeholder="Select District"
                         className="filter-select w-48 text-xs"
                         filter
                     />
                 </label>
 
-                <label className="filter-label block  font-semibold text-gray-700">
+                {/* Municipality Dropdown */}
+                <label className="filter-label block font-semibold text-gray-700">
                     Municipality
                     <Dropdown
                         name="municipality"
                         value={filters.municipality}
-                        onChange={handleFilterChange}
-                        options={municipalities.map((municipality) => ({
-                            label: municipality.name_en,
-                            value: municipality.name_en
-                        }))}
+                        onChange={(e) => handleFilterChange('municipality', e.value)}
+                        options={municipalities
+                            .filter((m) => (!filters.district || m.district.name_en === filters.district) && (!filters.province || m.district.province.name_en === filters.province))
+                            .map((municipality) => ({
+                                label: municipality.name_en,
+                                value: municipality.name_en
+                            }))}
                         placeholder="Select Municipality"
                         className="filter-select w-48 text-xs"
                         filter
                     />
                 </label>
 
+                {/* Ward Dropdown */}
                 <label className="filter-label block font-semibold text-gray-700">
                     Ward
                     <Dropdown
                         name="ward"
                         value={filters.ward}
-                        onChange={handleFilterChange}
-                        options={wards.map((ward) => ({
-                            label: ward,
-                            value: ward
-                        }))}
+                        onChange={(e) => handleFilterChange('ward', e.value)}
+                        options={wards
+                            .filter((w) => !filters.municipality || w.municipality.name_en === filters.municipality)
+                            .map((ward) => ({
+                                label: `Ward ${ward.name_en}`,
+                                value: ward.name_en
+                            }))}
                         placeholder="Select Ward"
                         className="filter-select w-48 text-xs"
                         filter
                     />
                 </label>
 
-                <button
-                    onClick={toggleChart}
-                    className="bg-blue-500 text-white px-4 py-2 rounded mt-5"
-                >
+                <button onClick={toggleChart} className="bg-blue-500 text-white px-4 py-2 rounded mt-5">
                     Show Chart
                 </button>
             </div>
