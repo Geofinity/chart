@@ -3,12 +3,19 @@
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import province from './geojson/province.geojson.json';
+// import municipalities from './geojson/municipality.geojson.json'
+// import district from './geojson/district.geojson.json'
+// import ward from './geojson/ward.geojson.json'
 import { Dropdown } from 'primereact/dropdown'; // Import PrimeReact Dropdown
+import ChartDemo from '../charts/page';
 
 const LeafletMap = () => {
     const [districts, setDistricts] = useState([]);
     const [municipalities, setMunicipalities] = useState([]);
     const [provinces, setProvinces] = useState([]);
+    const [displayChart, setDisplayChart] = useState(false); // Chart state
+
+    const chartRef = useRef(null); // Ref for the chart section
 
     const fetchData = async () => {
         try {
@@ -52,7 +59,7 @@ const LeafletMap = () => {
 
     useEffect(() => {
         if (!mapRef.current) {
-            mapRef.current = L.map('map').setView([28.232, 83.979], 7);
+            mapRef.current = L.map('map').setView([28.232, 83.979], 8);
 
             L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
@@ -132,10 +139,19 @@ const LeafletMap = () => {
         }));
     };
 
+    const toggleChart = async() => {
+        await setDisplayChart(true);
+
+        // Scroll to chart section
+        if (chartRef.current) {
+            chartRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    };
+
     return (
-        <div>
-            <div className="filters-container">
-                <label className="filter-label block text-sm font-semibold text-gray-700">
+        <div className='flex flex-col gap-5 items-center'>
+            <div className="filters-container text-xl bg-white flex px-6">
+                <label className="filter-label block  font-semibold text-gray-700 ">
                     Fiscal Year
                     <Dropdown
                         name="fiscalYear"
@@ -147,7 +163,7 @@ const LeafletMap = () => {
                     />
                 </label>
 
-                <label className="filter-label block text-sm font-semibold text-gray-700">
+                <label className="filter-label block font-semibold text-gray-700">
                     Province
                     <Dropdown
                         name="province"
@@ -163,7 +179,7 @@ const LeafletMap = () => {
                     />
                 </label>
 
-                <label className="filter-label block text-sm font-semibold text-gray-700">
+                <label className="filter-label block font-semibold text-gray-700">
                     District
                     <Dropdown
                         name="district"
@@ -179,7 +195,7 @@ const LeafletMap = () => {
                     />
                 </label>
 
-                <label className="filter-label block text-sm font-semibold text-gray-700">
+                <label className="filter-label block  font-semibold text-gray-700">
                     Municipality
                     <Dropdown
                         name="municipality"
@@ -195,7 +211,7 @@ const LeafletMap = () => {
                     />
                 </label>
 
-                <label className="filter-label block text-sm font-semibold text-gray-700">
+                <label className="filter-label block font-semibold text-gray-700">
                     Ward
                     <Dropdown
                         name="ward"
@@ -210,9 +226,22 @@ const LeafletMap = () => {
                         filter
                     />
                 </label>
+
+                <button
+                    onClick={toggleChart}
+                    className="bg-blue-500 text-white px-4 py-2 rounded mt-5"
+                >
+                    Show Chart
+                </button>
             </div>
 
-            <div id="map" style={{ height: '75vh', width: '100vw' }}></div>
+            <div id="map" style={{ height: '90vh', width: '90vw' }}></div>
+
+            {displayChart && (
+                <div ref={chartRef}>
+                    <ChartDemo />
+                </div>
+            )}
         </div>
     );
 };

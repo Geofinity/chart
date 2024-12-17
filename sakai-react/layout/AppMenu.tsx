@@ -24,7 +24,7 @@ const AppMenu = () => {
                 // { label: 'Input', icon: 'pi pi-fw pi-check-square', to: '/uikit/input' },
                 // { label: 'Float Label', icon: 'pi pi-fw pi-bookmark', to: '/uikit/floatlabel' },
                 // { label: 'Invalid State', icon: 'pi pi-fw pi-exclamation-circle', to: '/uikit/invalidstate' },
-                // { label: 'Button', icon: 'pi pi-fw pi-mobile', to: '/uikit/button', class: 'rotated-icon' },
+                { label: 'Button', icon: 'pi pi-fw pi-mobile', to: '/uikit/button', class: 'rotated-icon' },
                 // { label: 'Table', icon: 'pi pi-fw pi-table', to: '/uikit/table' },
                 // { label: 'List', icon: 'pi pi-fw pi-list', to: '/uikit/list' },
                 // { label: 'Tree', icon: 'pi pi-fw pi-share-alt', to: '/uikit/tree' },

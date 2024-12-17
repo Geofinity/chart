@@ -16,8 +16,8 @@ const ChartDemo = () => {
         const textColorSecondary = documentStyle.getPropertyValue('--text-color-secondary') || '#6c757d';
         const surfaceBorder = documentStyle.getPropertyValue('--surface-border') || '#dfe7ef';
         const barData: ChartData = {
-            labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
-            datasets: [
+            labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'], //add labels
+            datasets: [ // datasets
                 {
                     label: 'My First dataset',
                     backgroundColor: documentStyle.getPropertyValue('--primary-500') || '#6366f1',
@@ -29,6 +29,18 @@ const ChartDemo = () => {
                     backgroundColor: documentStyle.getPropertyValue('--primary-200') || '#bcbdf9',
                     borderColor: documentStyle.getPropertyValue('--primary-200') || '#bcbdf9',
                     data: [28, 48, 40, 19, 86, 27, 90]
+                },
+                {
+                    label: 'My Third dataset',
+                    backgroundColor: documentStyle.getPropertyValue('--primary-200') || '#bcbdf9',
+                    borderColor: documentStyle.getPropertyValue('--primary-200') || '#bcbdf9',
+                    data: [82, 84, 4, 91, 68, 72, 9]
+                },
+                {
+                    label: 'My fourth dataset',
+                    backgroundColor: documentStyle.getPropertyValue('--primary-200') || '#bcbdf9',
+                    borderColor: documentStyle.getPropertyValue('--primary-200') || '#bcbdf9',
+                    data: [18, 38, 30, 9, 76, 17, 80]
                 }
             ]
         };
@@ -71,13 +83,14 @@ const ChartDemo = () => {
         };
 
         const pieData: ChartData = {
-            labels: ['A', 'B', 'C'],
+            labels: ['A', 'B', 'C','D'],
             datasets: [
                 {
-                    data: [540, 325, 702],
+                    data: [540, 325, 702, 5000],
                     backgroundColor: [documentStyle.getPropertyValue('--indigo-500') || '#6366f1', documentStyle.getPropertyValue('--purple-500') || '#a855f7', documentStyle.getPropertyValue('--teal-500') || '#14b8a6'],
                     hoverBackgroundColor: [documentStyle.getPropertyValue('--indigo-400') || '#8183f4', documentStyle.getPropertyValue('--purple-400') || '#b975f9', documentStyle.getPropertyValue('--teal-400') || '#41c5b7']
                 }
+                
             ]
         };
 
@@ -110,7 +123,22 @@ const ChartDemo = () => {
                     backgroundColor: documentStyle.getPropertyValue('--primary-200') || '#bcbdf9',
                     borderColor: documentStyle.getPropertyValue('--primary-200') || '#bcbdf9',
                     tension: 0.4
+                },
+                {
+                    label: 'My Third dataset',
+                    backgroundColor: documentStyle.getPropertyValue('--primary-200') || '#bcbdf9',
+                    borderColor: documentStyle.getPropertyValue('--primary-200') || '#bcbdf9',
+                    data: [82, 84, 4, 91, 68, 72, 9],
+                    tension: 0.4
+                },
+                {
+                    label: 'My fourth dataset',
+                    backgroundColor: documentStyle.getPropertyValue('--primary-200') || '#bcbdf9',
+                    borderColor: documentStyle.getPropertyValue('--primary-200') || '#bcbdf9',
+                    data: [18, 38, 30, 9, 76, 17, 80],
+                    tension: 0.4
                 }
+                
             ]
         };
 
@@ -201,6 +229,18 @@ const ChartDemo = () => {
                     pointHoverBackgroundColor: textColor,
                     pointHoverBorderColor: documentStyle.getPropertyValue('--purple-400') || '#b975f9',
                     data: [28, 48, 40, 19, 96, 27, 100]
+                },
+                {
+                    label: 'My Third dataset',
+                    backgroundColor: documentStyle.getPropertyValue('--primary-200') || '#bcbdf9',
+                    borderColor: documentStyle.getPropertyValue('--primary-200') || '#bcbdf9',
+                    data: [82, 84, 4, 91, 68, 72, 9]
+                },
+                {
+                    label: 'My fourth dataset',
+                    backgroundColor: documentStyle.getPropertyValue('--primary-200') || '#bcbdf9',
+                    borderColor: documentStyle.getPropertyValue('--primary-200') || '#bcbdf9',
+                    data: [18, 38, 30, 9, 76, 17, 80]
                 }
             ]
         };
@@ -239,7 +279,7 @@ const ChartDemo = () => {
     }, [layoutConfig]);
 
     return (
-        <div className="grid p-fluid">
+        <div className="grid p-fluid flex flex-wrap">
             <div className="col-12 xl:col-6">
                 <div className="card">
                     <h5>Linear Chart</h5>
@@ -275,7 +315,46 @@ const ChartDemo = () => {
                     <h5 className="text-left w-full">Radar Chart</h5>
                     <Chart type="radar" data={data.radarData} options={options.radarOptions}></Chart>
                 </div>
+                
             </div>
+            <div className="col-12 xl:col-6">
+                <div className="card">
+                    <h5> Test Linear Chart</h5>
+                    <Chart type="line" data={data.lineData} options={options.lineOptions}></Chart>
+                </div>
+            </div>
+            <div className="col-12 xl:col-6">
+                <div className="card">
+                    <h5>Test Bar Chart</h5>
+                    <Chart type="bar" data={data.barData} options={options.barOptions}></Chart>
+                </div>
+            </div>
+            <div className="col-12 xl:col-6">
+                <div className="card flex flex-column align-items-center">
+                    <h5 className="text-left w-full">Test Pie Chart</h5>
+                    <Chart type="pie" data={data.pieData} options={options.pieOptions}></Chart>
+                </div>
+            </div>
+            <div className="col-12 xl:col-6">
+                <div className="card flex flex-column align-items-center">
+                    <h5 className="text-left w-full">Test Doughnut Chart</h5>
+                    <Chart type="doughnut" data={data.pieData} options={options.pieOptions}></Chart>
+                </div>
+            </div>
+            <div className="col-12 xl:col-6">
+                <div className="card flex flex-column align-items-center">
+                    <h5 className="text-left w-full">Test Polar Area Chart</h5>
+                    <Chart type="polarArea" data={data.polarData} options={options.polarOptions}></Chart>
+                </div>
+            </div>
+            <div className="col-12 xl:col-6">
+                <div className="card flex flex-column align-items-center">
+                    <h5 className="text-left w-full">Test Radar Chart</h5>
+                    <Chart type="radar" data={data.radarData} options={options.radarOptions}></Chart>
+                </div>
+                
+            </div>
+            
         </div>
     );
 };
