@@ -134,6 +134,7 @@ const LeafletMap = () => {
             updatedFilters.district = null;
             updatedFilters.municipality = null;
             updatedFilters.ward = null;
+            setdisplayWard(false)
         }
         if (name === 'district') {
             updatedFilters.municipality = null;
@@ -142,6 +143,7 @@ const LeafletMap = () => {
             // Update province automatically
             const district = districts.find((d) => d.name_en === value);
             updatedFilters.province = district ? district.province.name_en : filters.province;
+            setdisplayWard(false)
         }
         if (name === 'municipality') {
             updatedFilters.ward = null;
@@ -150,6 +152,7 @@ const LeafletMap = () => {
             const municipality = municipalities.find((m) => m.name_en === value);
             updatedFilters.district = municipality ? municipality.district.name_en : filters.district;
             updatedFilters.province = municipality ? municipality.district.province.name_en : filters.province;
+            setdisplayWard(true)
               
         }
 
@@ -228,7 +231,7 @@ const LeafletMap = () => {
                 {/* Ward Dropdown */}
                 <label className="filter-label block font-semibold text-gray-700">
                     Ward
-                    <Dropdown
+                    {displayWard?<Dropdown
                         name="ward"
                         value={filters.ward}
                         onChange={(e) => handleFilterChange('ward', e.value)}
@@ -241,7 +244,23 @@ const LeafletMap = () => {
                         placeholder="Select Ward"
                         className="filter-select w-48 text-xs"
                         filter
-                    />
+                        
+                    />:<Dropdown
+                    name="ward"
+                    value={filters.ward}
+                    onChange={(e) => handleFilterChange('ward', e.value)}
+                    options={wards
+                        .filter((w) => !filters.municipality || w.municipality.name_en === filters.municipality)
+                        .map((ward) => ({
+                            label: `Ward ${ward.name_en}`,
+                            value: ward.name_en
+                        }))}
+                    placeholder="Select Ward"
+                    className="filter-select w-48 text-xs"
+                    filter
+                    disabled
+                    
+                /> }
                 </label>
 
                 <button onClick={toggleChart} className="bg-blue-500 text-white px-4 py-2 rounded mt-5">
